@@ -1,0 +1,97 @@
+<?php
+/**
+ * Magiccart 
+ * @category 	Magiccart 
+ * @copyright 	Copyright (c) 2014 Magiccart (http://www.magiccart.net/) 
+ * @license 	http://www.magiccart.net/license-agreement.html
+ * @Author: DOng NGuyen<nguyen@dvn.com>
+ * @@Create Date: 2014-05-08 22:57:12
+ * @@Modify Date: 2015-04-22 11:04:02
+ * @@Function:
+ */
+ ?>
+<?php if(!$this->getGeneralCfg('enabled')) return; ?>
+<?php if($this->getStatus() == 2) return; ?>
+<?php $selector = $this->generateRandomString(); //md5(rand()); //rand(0,666666); ?>
+<?php
+    $catId = $this->getActive();
+    if(is_null($catId)) $catId = (int) $this->getRequest()->getParam('type');
+	$_category = Mage::getModel('catalog/category')->load($this->getCategoryId());
+?>
+<div class= "<?php echo $selector?> magicproduct">
+<?php
+$tabs = $this->getTabs();
+$ajax = json_encode($this->getProductCfg());
+$numTabs = count($tabs);
+$toDate = $this->getData('countdown');
+$now = strtotime(date("Y-m-d H:i:s"));
+if($toDate && $now <= strtotime($toDate)):
+?>
+    <div class="alo-count-down count-down-time">
+	     <span class="icon-clock fa fa-clock-o"></span>
+	    <div id="countbox_<?php echo $this->getIdentifier(); ?>" class="timer-view"></div>
+    </div>
+    <script type="text/javascript">
+        (function (){
+            var dthen = new Date("<?php echo Date("m/d/y", strtotime($toDate)).' 11:59:00 PM'; ?>");
+            var start_date = Date.parse(startMcTimer);
+            var dnow = new Date(start_date);
+            if(CountStepper>0) ddiff= new Date((dnow)-(dthen));
+            else ddiff = new Date((dthen)-(dnow));
+            var gsecs = Math.floor(ddiff.valueOf()/1000);
+            var iid = "countbox_<?php echo $this->getIdentifier(); ?>";
+            CountBack(gsecs,iid, mcTimer);
+            mcTimer++;
+        })();
+    </script>
+<?php
+endif;
+if($numTabs): ?>
+    <div class="block-title-tabs clearfix">
+	<ul class="magictabs" data-ajax ='<?php echo $ajax ?>'>
+	<?php $active = $this->getTabActive();
+		$limit = $this->getNumProduct();
+		$single = ($numTabs ==1) ? 'single' : '';
+		foreach ($tabs as $type => $name):
+			$status = ($type == $active) ? "active loaded $single" : '';
+			echo '<li class="item '.$status.'" data-type ="'.$type.'"><span class ="title">'.$this->__($name).'</span></li>';
+		endforeach;
+	?>
+	</ul>
+	<a href="<?php echo $this->getUrl($active) ?>" title="<?php echo __('Browse All Products') ?>" class="cat-view-all"><?php echo __('Browse All Products') ?></a>
+    </div>
+<?php endif ?>
+	<div class="ajax_loading" style="display:none" data-url="<?php echo $this->getUrl('magicproduct/index/ajax', array('_type' => 'direct_link', '_secure'=>$this->getRequest()->isSecure()))?>">
+		<img src="<?php echo $this->getSkinUrl('magiccart/plugin/images/loading.gif')?>" alt="<?php echo $this->__('Loading...');?>"/>
+	</div>
+	<?php 
+		$margin  = (int) $this->getData('marginColumn');
+		$slide   = json_encode($this->setFlexiselArray());
+		$options = json_encode($this->getItemsDevice());
+	?>
+	<div class="box-product-content clearfix">
+	<div class="content-products" data-margin="<?php echo $margin ?>" data-slider='<?php echo $slide ?>' data-options='<?php echo $options; ?>'>
+	<?php 
+		$timer = $this->getTimer();
+		if($timer){
+			echo $this->getContentActive('magiccart/magicproduct/product/gridtimer.phtml');	
+		} else {
+			echo $this->getContentActive('magiccart/magicproduct/product/grid.phtml');	
+		}
+		
+	?>
+	</div>
+	</div>
+	<!-- MAP -->
+	<?php echo $this->getChildHtml('product.tooltip');?>
+	<!-- MAP -->
+</div>
+
+<script type="text/javascript">
+jQuery(document).ready(function () {
+	jQuery(".<?php echo $selector?>").magicproduct({
+		selector : ".<?php echo $selector?>", // Selector product grid
+	});
+});
+</script>
+
